@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Real Estate Deal Analyzer</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f6f8;
+margin:0;
+padding:0;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:30px;
+}
+
+h1{
+text-align:center;
+color:#2c3e50;
+}
+
+.card{
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+margin-top:20px;
+}
+
+label{
+display:block;
+margin-top:15px;
+font-weight:bold;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:5px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:8px;
+background:#27ae60;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1e8449;
+}
+
+.result{
+margin-top:25px;
+padding:20px;
+border-radius:8px;
+background:#ecf0f1;
+}
+
+.buy{color:green;font-size:26px;font-weight:bold;}
+.negotiate{color:orange;font-size:26px;font-weight:bold;}
+.decline{color:red;font-size:26px;font-weight:bold;}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Real Estate Deal Analyzer</h1>
+
+<div class="card">
+
+<label>Purchase Price</label>
+<input id="purchase">
+
+<label>Rehab Cost</label>
+<input id="rehab">
+
+<label>Loan Amount</label>
+<input id="loan">
+
+<label>Interest Rate (%)</label>
+<input id="rate">
+
+<label>Monthly Rent</label>
+<input id="rent">
+
+<label>Property Tax (Monthly)</label>
+<input id="tax">
+
+<label>Insurance (Monthly)</label>
+<input id="insurance">
+
+<label>Maintenance (Monthly)</label>
+<input id="maintenance">
+
+<button onclick="analyzeDeal()">Analyze Deal</button>
+
+<div class="result" id="result"></div>
+
+</div>
+</div>
+
+<script>
+
+function analyzeDeal(){
+
+let purchase = parseFloat(document.getElementById("purchase").value);
+let rehab = parseFloat(document.getElementById("rehab").value);
+let loan = parseFloat(document.getElementById("loan").value);
+let rate = parseFloat(document.getElementById("rate").value);
+let rent = parseFloat(document.getElementById("rent").value);
+let tax = parseFloat(document.getElementById("tax").value);
+let insurance = parseFloat(document.getElementById("insurance").value);
+let maintenance = parseFloat(document.getElementById("maintenance").value);
+
+let monthlyInterest = (loan * (rate/100))/12;
+
+let expenses = monthlyInterest + tax + insurance + maintenance;
+
+let cashflow = rent - expenses;
+
+let decision="";
+let css="";
+
+if(cashflow > 300){
+decision="BUY";
+css="buy";
+}
+else if(cashflow > 0){
+decision="NEGOTIATE";
+css="negotiate";
+}
+else{
+decision="DECLINE";
+css="decline";
+}
+
+document.getElementById("result").innerHTML =
+
+`
+<h3>Analysis Result</h3>
+
+<p>Monthly Loan Cost: $${monthlyInterest.toFixed(2)}</p>
+<p>Total Monthly Expenses: $${expenses.toFixed(2)}</p>
+<p>Monthly Cashflow: $${cashflow.toFixed(2)}</p>
+
+<p class="${css}">${decision}</p>
+
+`;
+
+}
+
+</script>
+
+</body>
+</html>
