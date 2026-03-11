@@ -2,284 +2,225 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Real Estate Investor Analyzer</title>
+<title>Real Estate Investment Analyzer</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Leaflet CSS & JS for OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-
-body{
-font-family:Arial;
-background:#f4f6f8;
-margin:0;
-padding:0;
+body {
+    font-family: Arial;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 0;
 }
-
-.container{
-max-width:1000px;
-margin:auto;
-padding:30px;
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 30px;
 }
-
-h1{
-text-align:center;
-color:#2c3e50;
-}
-
-.card{
-background:white;
-padding:25px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-margin-top:20px;
-}
-
-label{
-display:block;
-margin-top:12px;
-font-weight:bold;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:5px;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-button{
-margin-top:15px;
-width:100%;
-padding:14px;
-border:none;
-border-radius:8px;
-background:#27ae60;
-color:white;
-font-size:16px;
-cursor:pointer;
-}
-
-button:hover{
-background:#1e8449;
-}
-
-.result{
-margin-top:20px;
-padding:20px;
-background:#ecf0f1;
-border-radius:8px;
-}
-
-.buy{color:green;font-size:26px;font-weight:bold;}
-.negotiate{color:orange;font-size:26px;font-weight:bold;}
-.decline{color:red;font-size:26px;font-weight:bold;}
-
-.tools button{
-width:30%;
-margin-right:10px;
-}
-
+h1 { text-align: center; color: #2c3e50; }
+.card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 20px; }
+label { display: block; margin-top: 15px; font-weight: bold; }
+input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
+button { margin-top: 20px; width: 100%; padding: 15px; border: none; border-radius: 8px; background: #27ae60; color: white; font-size: 18px; cursor: pointer; }
+button:hover { background: #1e8449; }
+.result { margin-top: 25px; padding: 20px; border-radius: 8px; background: #ecf0f1; }
+.buy { color: green; font-size: 26px; font-weight: bold; }
+.negotiate { color: orange; font-size: 26px; font-weight: bold; }
+.decline { color: red; font-size: 26px; font-weight: bold; }
+.row { display: flex; gap: 20px; flex-wrap: wrap; }
+.column { flex: 1; min-width: 300px; }
+#map { height: 350px; margin-top: 15px; }
 </style>
 </head>
-
 <body>
 
 <div class="container">
+<h1>Real Estate Investment Analyzer</h1>
 
-<h1>Real Estate Investor Deal Analyzer</h1>
+<div class="row">
+    <!-- Zillow URL / Property Input -->
+    <div class="column card">
+        <h2>Property Data</h2>
+        <label>Zillow Listing URL</label>
+        <input id="zillowURL" placeholder="Paste Zillow listing URL here">
 
+        <label>Address</label>
+        <input id="address" placeholder="Property Address">
+
+        <label>Bedrooms</label>
+        <input id="beds" placeholder="Bedrooms">
+
+        <label>Bathrooms</label>
+        <input id="baths" placeholder="Bathrooms">
+
+        <label>Square Footage</label>
+        <input id="sqft" placeholder="Square Footage">
+
+        <label>Monthly Rent</label>
+        <input id="rent" placeholder="Monthly Rent">
+
+        <label>ARV / Market Value</label>
+        <input id="arv" placeholder="ARV">
+
+        <button onclick="fetchZillowByURL()">Fetch Zillow Data</button>
+    </div>
+
+    <!-- Deal Analyzer -->
+    <div class="column card">
+        <h2>Deal Analyzer</h2>
+
+        <label>Purchase Price</label>
+        <input id="purchase">
+
+        <label>Rehab Cost</label>
+        <input id="rehab">
+
+        <label>Loan Amount</label>
+        <input id="loan">
+
+        <label>Interest Rate (%)</label>
+        <input id="rate">
+
+        <label>Property Tax (Monthly)</label>
+        <input id="tax">
+
+        <label>Insurance (Monthly)</label>
+        <input id="insurance">
+
+        <label>Maintenance (Monthly)</label>
+        <input id="maintenance">
+
+        <button onclick="analyzeDeal()">Analyze Deal</button>
+
+        <div class="result" id="result"></div>
+
+        <button onclick="printReport()">Print Report</button>
+        <button onclick="emailReport()">Email Report</button>
+    </div>
+</div>
+
+<!-- OpenStreetMap -->
 <div class="card">
-
-<label>Purchase Price</label>
-<input id="purchase">
-
-<label>Rehab Cost</label>
-<input id="rehab">
-
-<label>Loan Amount</label>
-<input id="loan">
-
-<label>Interest Rate (%)</label>
-<input id="rate">
-
-<label>Monthly Rent</label>
-<input id="rent">
-
-<label>Property Tax (Monthly)</label>
-<input id="tax">
-
-<label>Insurance (Monthly)</label>
-<input id="insurance">
-
-<label>Maintenance (Monthly)</label>
-<input id="maintenance">
-
-<label>ARV (After Repair Value)</label>
-<input id="arv">
-
-<button onclick="analyzeDeal()">Analyze Deal</button>
-
-<div class="result" id="result"></div>
-
+    <h2>Property Map</h2>
+    <div id="map"></div>
 </div>
-
-</div>
-
 
 <script>
+// ===== Fetch Zillow Data =====
+async function fetchZillowByURL() {
+    const url = document.getElementById("zillowURL").value;
+    if (!url) return alert("Enter Zillow property URL");
 
-let reportText="";
+    try {
+        const response = await fetch(`https://zillw-real-estate-api.p.rapidapi.com/properties/apartment-details?url=${encodeURIComponent(url)}`, {
+            method: "GET",
+            headers: {
+                "x-rapidapi-host": "zillw-real-estate-api.p.rapidapi.com",
+                "x-rapidapi-key": "YOUR_API_KEY" // replace with your RapidAPI key
+            }
+        });
 
-function val(id){
-let v=parseFloat(document.getElementById(id).value);
-return isNaN(v)?0:v;
+        const data = await response.json();
+
+        document.getElementById("beds").value = data.bedrooms || "";
+        document.getElementById("baths").value = data.bathrooms || "";
+        document.getElementById("sqft").value = data.sqft || "";
+        document.getElementById("rent").value = data.rent || "";
+        document.getElementById("arv").value = data.zestimate || "";
+
+        document.getElementById("address").value = data.address || "";
+
+        showOSMMap(document.getElementById("address").value);
+
+        alert("Property data loaded from Zillow!");
+    } catch(err) {
+        console.error(err);
+        alert("Error fetching Zillow data");
+    }
 }
 
+// ===== Deal Analyzer =====
 function analyzeDeal(){
+    let purchase = parseFloat(document.getElementById("purchase").value) || 0;
+    let rehab = parseFloat(document.getElementById("rehab").value) || 0;
+    let loan = parseFloat(document.getElementById("loan").value) || 0;
+    let rate = parseFloat(document.getElementById("rate").value) || 0;
+    let rent = parseFloat(document.getElementById("rent").value) || 0;
+    let tax = parseFloat(document.getElementById("tax").value) || 0;
+    let insurance = parseFloat(document.getElementById("insurance").value) || 0;
+    let maintenance = parseFloat(document.getElementById("maintenance").value) || 0;
 
-let purchase = val("purchase");
-let rehab = val("rehab");
-let loan = val("loan");
-let rate = val("rate");
-let rent = val("rent");
-let tax = val("tax");
-let insurance = val("insurance");
-let maintenance = val("maintenance");
-let arv = val("arv");
+    let monthlyInterest = (loan * (rate/100))/12;
+    let expenses = monthlyInterest + tax + insurance + maintenance;
+    let cashflow = rent - expenses;
 
-let monthlyInterest = (loan*(rate/100))/12;
+    let decision="", css="";
+    if(cashflow > 300){ decision="BUY"; css="buy"; }
+    else if(cashflow > 0){ decision="NEGOTIATE"; css="negotiate"; }
+    else{ decision="DECLINE"; css="decline"; }
 
-let expenses = monthlyInterest + tax + insurance + maintenance;
+    let maxOffer = (rent*12*0.7) - rehab;
+    let flipProfit = (parseFloat(document.getElementById("arv").value) || 0) - purchase - rehab;
 
-let cashflow = rent - expenses;
-
-let maxOffer = (arv*0.7) - rehab;
-
-let flipProfit = arv - (purchase + rehab);
-
-let decision="";
-let css="";
-
-if(cashflow>300 && purchase<=maxOffer){
-decision="BUY";
-css="buy";
-}
-else if(cashflow>0){
-decision="NEGOTIATE";
-css="negotiate";
-}
-else{
-decision="DECLINE";
-css="decline";
+    document.getElementById("result").innerHTML =
+    `<h3>Analysis Result</h3>
+    <p>Monthly Loan Cost: $${monthlyInterest.toFixed(2)}</p>
+    <p>Total Monthly Expenses: $${expenses.toFixed(2)}</p>
+    <p>Monthly Cashflow: $${cashflow.toFixed(2)}</p>
+    <p>Decision: <span class="${css}">${decision}</span></p>
+    <p>Max Offer (BRRRR): $${maxOffer.toFixed(2)}</p>
+    <p>Potential Flip Profit: $${flipProfit.toFixed(2)}</p>`;
 }
 
-let score = Math.round((cashflow + 500)/10);
+// ===== OpenStreetMap =====
+function showOSMMap(address) {
+    if (!address) return;
 
-reportText = `
-REAL ESTATE DEAL REPORT
+    fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(address))
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
 
-Purchase Price: $${purchase}
-Rehab Cost: $${rehab}
-Loan Amount: $${loan}
+                if (window.osmMap) { window.osmMap.remove(); }
 
-Monthly Loan Cost: $${monthlyInterest.toFixed(2)}
-Total Expenses: $${expenses.toFixed(2)}
-Monthly Cashflow: $${cashflow.toFixed(2)}
+                window.osmMap = L.map("map").setView([lat, lon], 15);
 
-Max Offer (70% Rule): $${maxOffer.toFixed(0)}
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution: "&copy; OpenStreetMap contributors",
+                }).addTo(window.osmMap);
 
-Flip Profit Estimate: $${flipProfit.toFixed(0)}
-
-Deal Score: ${score}/100
-
-Decision: ${decision}
-`;
-
-document.getElementById("result").innerHTML =
-
-`
-<div id="reportArea">
-
-<h2>Deal Report</h2>
-
-<p><b>Monthly Loan Cost:</b> $${monthlyInterest.toFixed(2)}</p>
-<p><b>Total Monthly Expenses:</b> $${expenses.toFixed(2)}</p>
-<p><b>Monthly Cashflow:</b> $${cashflow.toFixed(2)}</p>
-
-<hr>
-
-<p><b>Maximum Offer (70% Rule):</b> $${maxOffer.toFixed(0)}</p>
-
-<p><b>Flip Profit Estimate:</b> $${flipProfit.toFixed(0)}</p>
-
-<p><b>Deal Score:</b> ${score}/100</p>
-
-<p class="${css}">${decision}</p>
-
-</div>
-
-<div class="tools">
-
-<button onclick="printReport()">Print</button>
-
-<button onclick="emailReport()">Email</button>
-
-<button onclick="downloadPDF()">Download PDF</button>
-
-</div>
-
-`;
-
+                L.marker([lat, lon]).addTo(window.osmMap);
+            }
+        })
+        .catch(err => console.error(err));
 }
 
-
-/* PRINT REPORT */
-
-function printReport(){
-
-let printContents = document.getElementById("reportArea").innerHTML;
-
-let newWindow = window.open("");
-
-newWindow.document.write("<html><body>");
-newWindow.document.write(printContents);
-newWindow.document.write("</body></html>");
-
-newWindow.print();
-
+// ===== Print Report =====
+function printReport() {
+    const content = document.getElementById("result").innerHTML;
+    const myWindow = window.open('', '', 'width=800,height=600');
+    myWindow.document.write('<html><head><title>Deal Report</title></head><body>');
+    myWindow.document.write(content);
+    myWindow.document.write('</body></html>');
+    myWindow.document.close();
+    myWindow.print();
 }
 
-
-/* EMAIL REPORT */
-
-function emailReport(){
-
-let subject="Real Estate Deal Report";
-
-let body=encodeURIComponent(reportText);
-
-window.location.href="mailto:?subject="+subject+"&body="+body;
-
+// ===== Email Report =====
+function emailReport() {
+    const content = encodeURIComponent(document.getElementById("result").innerText);
+    window.location.href = `mailto:?subject=Property Deal Analysis&body=${content}`;
 }
 
-
-/* PDF DOWNLOAD */
-
-function downloadPDF(){
-
-const { jsPDF } = window.jspdf;
-
-let pdf = new jsPDF();
-
-let lines = pdf.splitTextToSize(reportText,180);
-
-pdf.text(lines,10,20);
-
-pdf.save("Deal_Report.pdf");
-
-}
-
+// ===== Update Map When Address Changes =====
+document.getElementById("address").addEventListener("input", function(){
+    showOSMMap(this.value);
+});
 </script>
 
 </body>
