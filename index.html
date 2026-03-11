@@ -2,19 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Real Estate Deal Analyzer</title>
+<title>Real Estate Investor Analyzer</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 background:#f4f6f8;
 margin:0;
 padding:0;
 }
 
 .container{
-max-width:900px;
+max-width:1000px;
 margin:auto;
 padding:30px;
 }
@@ -34,7 +36,7 @@ margin-top:20px;
 
 label{
 display:block;
-margin-top:15px;
+margin-top:12px;
 font-weight:bold;
 }
 
@@ -47,14 +49,14 @@ border:1px solid #ccc;
 }
 
 button{
-margin-top:20px;
+margin-top:15px;
 width:100%;
-padding:15px;
+padding:14px;
 border:none;
 border-radius:8px;
 background:#27ae60;
 color:white;
-font-size:18px;
+font-size:16px;
 cursor:pointer;
 }
 
@@ -63,15 +65,20 @@ background:#1e8449;
 }
 
 .result{
-margin-top:25px;
+margin-top:20px;
 padding:20px;
-border-radius:8px;
 background:#ecf0f1;
+border-radius:8px;
 }
 
 .buy{color:green;font-size:26px;font-weight:bold;}
 .negotiate{color:orange;font-size:26px;font-weight:bold;}
 .decline{color:red;font-size:26px;font-weight:bold;}
+
+.tools button{
+width:30%;
+margin-right:10px;
+}
 
 </style>
 </head>
@@ -80,7 +87,7 @@ background:#ecf0f1;
 
 <div class="container">
 
-<h1>Real Estate Deal Analyzer</h1>
+<h1>Real Estate Investor Deal Analyzer</h1>
 
 <div class="card">
 
@@ -108,40 +115,57 @@ background:#ecf0f1;
 <label>Maintenance (Monthly)</label>
 <input id="maintenance">
 
+<label>ARV (After Repair Value)</label>
+<input id="arv">
+
 <button onclick="analyzeDeal()">Analyze Deal</button>
 
 <div class="result" id="result"></div>
 
 </div>
+
 </div>
+
 
 <script>
 
+let reportText="";
+
+function val(id){
+let v=parseFloat(document.getElementById(id).value);
+return isNaN(v)?0:v;
+}
+
 function analyzeDeal(){
 
-let purchase = parseFloat(document.getElementById("purchase").value);
-let rehab = parseFloat(document.getElementById("rehab").value);
-let loan = parseFloat(document.getElementById("loan").value);
-let rate = parseFloat(document.getElementById("rate").value);
-let rent = parseFloat(document.getElementById("rent").value);
-let tax = parseFloat(document.getElementById("tax").value);
-let insurance = parseFloat(document.getElementById("insurance").value);
-let maintenance = parseFloat(document.getElementById("maintenance").value);
+let purchase = val("purchase");
+let rehab = val("rehab");
+let loan = val("loan");
+let rate = val("rate");
+let rent = val("rent");
+let tax = val("tax");
+let insurance = val("insurance");
+let maintenance = val("maintenance");
+let arv = val("arv");
 
-let monthlyInterest = (loan * (rate/100))/12;
+let monthlyInterest = (loan*(rate/100))/12;
 
 let expenses = monthlyInterest + tax + insurance + maintenance;
 
 let cashflow = rent - expenses;
 
+let maxOffer = (arv*0.7) - rehab;
+
+let flipProfit = arv - (purchase + rehab);
+
 let decision="";
 let css="";
 
-if(cashflow > 300){
+if(cashflow>300 && purchase<=maxOffer){
 decision="BUY";
 css="buy";
 }
-else if(cashflow > 0){
+else if(cashflow>0){
 decision="NEGOTIATE";
 css="negotiate";
 }
@@ -150,18 +174,109 @@ decision="DECLINE";
 css="decline";
 }
 
+let score = Math.round((cashflow + 500)/10);
+
+reportText = `
+REAL ESTATE DEAL REPORT
+
+Purchase Price: $${purchase}
+Rehab Cost: $${rehab}
+Loan Amount: $${loan}
+
+Monthly Loan Cost: $${monthlyInterest.toFixed(2)}
+Total Expenses: $${expenses.toFixed(2)}
+Monthly Cashflow: $${cashflow.toFixed(2)}
+
+Max Offer (70% Rule): $${maxOffer.toFixed(0)}
+
+Flip Profit Estimate: $${flipProfit.toFixed(0)}
+
+Deal Score: ${score}/100
+
+Decision: ${decision}
+`;
+
 document.getElementById("result").innerHTML =
 
 `
-<h3>Analysis Result</h3>
+<div id="reportArea">
 
-<p>Monthly Loan Cost: $${monthlyInterest.toFixed(2)}</p>
-<p>Total Monthly Expenses: $${expenses.toFixed(2)}</p>
-<p>Monthly Cashflow: $${cashflow.toFixed(2)}</p>
+<h2>Deal Report</h2>
+
+<p><b>Monthly Loan Cost:</b> $${monthlyInterest.toFixed(2)}</p>
+<p><b>Total Monthly Expenses:</b> $${expenses.toFixed(2)}</p>
+<p><b>Monthly Cashflow:</b> $${cashflow.toFixed(2)}</p>
+
+<hr>
+
+<p><b>Maximum Offer (70% Rule):</b> $${maxOffer.toFixed(0)}</p>
+
+<p><b>Flip Profit Estimate:</b> $${flipProfit.toFixed(0)}</p>
+
+<p><b>Deal Score:</b> ${score}/100</p>
 
 <p class="${css}">${decision}</p>
 
+</div>
+
+<div class="tools">
+
+<button onclick="printReport()">Print</button>
+
+<button onclick="emailReport()">Email</button>
+
+<button onclick="downloadPDF()">Download PDF</button>
+
+</div>
+
 `;
+
+}
+
+
+/* PRINT REPORT */
+
+function printReport(){
+
+let printContents = document.getElementById("reportArea").innerHTML;
+
+let newWindow = window.open("");
+
+newWindow.document.write("<html><body>");
+newWindow.document.write(printContents);
+newWindow.document.write("</body></html>");
+
+newWindow.print();
+
+}
+
+
+/* EMAIL REPORT */
+
+function emailReport(){
+
+let subject="Real Estate Deal Report";
+
+let body=encodeURIComponent(reportText);
+
+window.location.href="mailto:?subject="+subject+"&body="+body;
+
+}
+
+
+/* PDF DOWNLOAD */
+
+function downloadPDF(){
+
+const { jsPDF } = window.jspdf;
+
+let pdf = new jsPDF();
+
+let lines = pdf.splitTextToSize(reportText,180);
+
+pdf.text(lines,10,20);
+
+pdf.save("Deal_Report.pdf");
 
 }
 
